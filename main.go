@@ -3,34 +3,78 @@ package main
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"flag"
 	"fmt"
 	"net"
 	"time"
 )
 
-func connectKerberos() net.Conn {
-	conn, _ := net.Dial("tcp", "192.168.56.106:88")
+func connectKerberos(targetServerPort string) net.Conn {
+	conn, _ := net.Dial("tcp", targetServerPort)
 	return conn
 }
 
+
+
 func sendReq(connect net.Conn) {
-	fmt.Println(connect)
-	//	000000d0
-	kerberosProtoVersion := "05"
-	messageType := "0a"
-	message := "6a81cd3081caa1030201"+kerberosProtoVersion+"a2030201"+messageType+"a31530133011a10402020080a20904073005a0030101ffa481a63081a3a00703050040810010a111300fa003020101a10830061b0475736572a2061b0454455354a3193017a003020102a110300e1b066b72627467741b0454455354a511180f32303337303931333032343830355aa611180f32303337303931333032343830355aa70602040aef4a2ea81530130201120201110201170201180202ff79020103a91d301b3019a003020114a1120410434c49454e5431202020202020202020"
+
+	var newRequest asReq
+	newRequest.kerberosProtoVersion = "05"
+	newRequest.messageType = "0a"
+	newRequest.paDataType = "0080"
+	newRequest.paDataValue = "3005a0030101"
+	newRequest.includePac = "ff" // true
+	newRequest.kdcOptions = "40810010"
+	newRequest.cnameNameType = "01"
+	newRequest.cnameCnameString = hex.EncodeToString([]byte("user"))
+	newRequest.cnameRealm = hex.EncodeToString([]byte("TEST"))
+	newRequest.snameNameType = "02"
+	newRequest.snameString1 = hex.EncodeToString([]byte("krbtgt"))
+	newRequest.snameString2 = hex.EncodeToString([]byte("TEST"))
+	newRequest.snameTill = hex.EncodeToString([]byte("20370913024805Z"))
+	newRequest.snameRTime = hex.EncodeToString([]byte("20370913024805Z"))
+	newRequest.snameNonce = "0aef4a2e"
+	newRequest.addressesAddrType = "14" // 14 - nETBIOS
+	newRequest.addressesNetBIOSName = hex.EncodeToString([]byte("CLIENT1         ")) // 434c49454e5431202020202020202020 field may be longer, no error here
+	message := newRequest.buildAsReq()
+	//fmt.Println(message)
+	fmt.Println(message)
 	messageLen := uint32(len(message)/2) // 208
+	fmt.Println(messageLen)
 	bs := make([]byte, 4)
 	binary.BigEndian.PutUint32(bs, messageLen)
 	fmt.Println(bs)
 	data,_ := hex.DecodeString(message)
 	data = append(bs,data...)
+	fmt.Println(data)
+	fmt.Println(hex.EncodeToString(data))
 	connect.Write(data)
 	time.Sleep(1*time.Second)
 }
 
+var barkTargetDC string
+var barkAction string
+var barkAccount string
+var barkDomain string
+var barkMachine string
+
+func init() {
+	flag.StringVar(&barkTargetDC, "dc", "192.168.56.106", "DC ip address")
+	flag.StringVar(&barkAction, "action", "preauthCheck", "Bark action (checkAccount)")
+	flag.StringVar(&barkAccount, "account", "user", "Account to check")
+	flag.StringVar(&barkDomain, "domain", "test", "Domain/Realm to use")
+	flag.StringVar(&barkMachine, "netbios", "client1", "NetBIOS of local machine")
+	flag.Parse()
+
+
+}
+
 func main() {
 	fmt.Println("[:]\\/\\/\\/\\[:]")
-	myConnect := connectKerberos()
-	sendReq(myConnect)
+	myConnect := connectKerberos(barkTargetDC+":88")
+	//sendReq(myConnect)
+	barkAccount = "user"
+	barkDomain = "test"
+	sendReqASN(myConnect,barkAccount,barkDomain,barkMachine)
+	myConnect.Close()
 }
