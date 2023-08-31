@@ -16,6 +16,7 @@ import (
 	"time"
 )
 
+
 func FromASCIIString(in string) []byte {
 	var u16 []byte
 	for _, b := range []byte(in) {
@@ -170,7 +171,7 @@ func ComputeHmacMD5(message []byte, secret []byte) []byte {
 	return h.Sum(nil)
 }
 
-func sendReqWithPreAuthASN(connect net.Conn,account string,domain string,machine string) {
+func sendReqWithPreAuthASN(connect net.Conn,account string, password string,domain string,machine string) {
 	var as_req AS_REQ_STRUCT_WITH_PRE_AUTH
 	as_req.PVNO = asn_pvno_with_pre_auth{5}
 	as_req.MSG_TYPE = asn_msg_type_with_pre_auth{10}
@@ -182,8 +183,9 @@ func sendReqWithPreAuthASN(connect net.Conn,account string,domain string,machine
 
 	currentTimestamp := time.Now().UTC().Format("20060102150405")
 	currentTimestamp = currentTimestamp+"Z"
+	ntlmHash := FromASCIIStringToHex(password)
 
-	fmt.Println(currentTimestamp)
+	fmt.Println(ntlmHash)
 
 	temp22 := make([]asn1.RawValue,1)
 	currentTimestampForEncryption := AS_REQ_STRUCT_FOR_ENCRYPTED_TIMESTAMP{temp22}
@@ -198,7 +200,8 @@ func sendReqWithPreAuthASN(connect net.Conn,account string,domain string,machine
 	//fmt.Println(str1)
 	//str1 = "3013A011180F32303233303833313131343535335A" // HARDCODE
 	//str1 = "301aa011180f32303233303833313134343033385aa10502030a5b43" // HARDCODE
-	ntlm := "BF24F6D8D5983E17412275A09474B328"
+	//ntlm := "BF24F6D8D5983E17412275A09474B328"
+	ntlm := ntlmHash
 	key, _ := hex.DecodeString(ntlm)
 	dataToEncrypt, _ := hex.DecodeString(str1)
 	confounder := make([]byte, 8)

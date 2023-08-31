@@ -30,7 +30,7 @@ func init() {
 	flag.StringVar(&barkTargetDC, "dc", "192.168.56.106", "DC ip address")
 	flag.StringVar(&barkAction, "action", "preauthCheck", "Bark action (checkAccount)")
 	flag.StringVar(&barkAccount, "account", "user", "Account to check")
-	flag.StringVar(&barkPassword, "password", "password", "Account's password")
+	flag.StringVar(&barkPassword, "password", "client1sxdzSXDZ!@#123", "Account's password")
 	flag.StringVar(&barkDomain, "domain", "test", "Domain/Realm to use")
 	flag.StringVar(&barkMachine, "netbios", "client1", "NetBIOS of local machine")
 	flag.Parse()
@@ -46,7 +46,7 @@ func main() {
 	//barkPassword = "password"
 	//barkDomain = "test"
 	sendReqASN(myConnect,barkAccount,barkDomain,barkMachine)
-	sendReqWithPreAuthASN(myConnect,barkAccount,barkDomain,barkMachine)
+	sendReqWithPreAuthASN(myConnect,barkAccount,barkPassword,barkDomain,barkMachine)
 	myConnect.Close()
 
 }
