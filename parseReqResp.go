@@ -58,6 +58,8 @@ func parseAsReqResp(resp string) {
 	if n.ERROR_CODE.Item == 6 {
 		fmt.Println("Principal Unknown")
 	} else if n.ERROR_CODE.Item == 25 {
-		fmt.Println("Pre-Auth required")
+		fmt.Println("Pre-Auth Required")
+	} else if n.ERROR_CODE.Item == 24 {
+		fmt.Println("Pre-Auth Failed")
 	}
 }

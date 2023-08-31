@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"os"
 )
 
 type AS_REQ_STRUCT struct {
@@ -223,9 +222,3 @@ func sendReqASN(connect net.Conn,account string,domain string,machine string) {
 	parseAsReqResp(h2[:n*2])
 }
 
-func checkError(err error) {
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Fatal error: %s", err.Error())
-		os.Exit(1)
-	}
-}
